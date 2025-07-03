@@ -10,7 +10,7 @@ const path=require('path');
 
 
 const app=express();
-const PORT=4000;
+const PORT= process.env.PORT||4000;
 
 dotEnv.config();
 
@@ -29,6 +29,6 @@ app.listen(PORT,()=>{
     console.log(`server started and running at ${PORT}`);
 });
 app.use(bodyParser.json());
-app.use('/home',(req,res)=>{
-    res.send("<h1> welcome to hema")
+app.use('/',(req,res)=>{
+    res.send("<h1> welcome to hema");
 });
