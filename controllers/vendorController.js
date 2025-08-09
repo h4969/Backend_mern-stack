@@ -1,75 +1,106 @@
-const Vendor=require('../models/Vendor');
-const jwt =require('jsonwebtoken');
+const Vendor = require('../models/Vendor');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const dotEnv=require('dotenv');
+const dotEnv = require('dotenv');
 
 dotEnv.config();
-const secretkey=process.env.WhatIsYourName
 
-const vendorRegister=async(req,res)=>{
-    const {username,email,password}=req.body;
-    try{
-        const vendorEmail=await Vendor.findOne({email});
-        if(vendorEmail){
-            return res.status(400).json("Email alerady taken");
+const secretKey = process.env.WhatIsYourName
+
+
+
+const vendorRegister = async(req, res) => {
+    
+    try {
+      const { username, email, password } = req.body;
+        const vendorEmail = await Vendor.findOne({ email });
+        if (vendorEmail) {
+            return res.status(400).json("Email already taken");
         }
-        const hashedpassword=await bcrypt.hash(password,10);
-        const newVendor=new Vendor({
+        
+            
+
+          if (!username || !email || !password) {
+          return res.status(400).json({ error: "All fields are required" });
+          }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newVendor = new Vendor({
             username,
             email,
-            password:hashedpassword
+            password: hashedPassword
         });
         await newVendor.save();
-        res.status(201).json({message:"vendor registered successfully"});
+
+        res.status(201).json({ message: "Vendor registered successfully" });
         console.log('registered')
 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal server error" })
     }
-    catch(error){
-        res.status(500).json({error: "internal sever error"});
 
+}
+
+
+const vendorLogin = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const vendor = await Vendor.findOne({ email }).populate('firm');
+    if (!vendor || !(await bcrypt.compare(password, vendor.password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
-}
 
-const vendorLogin=async(req,res)=>{
-    const {email,password}=req.body;
-try{
-    const vendor=await Vendor.findOne({email});
-    if(!vendor || !(await bcrypt.compare(password,vendor.password))){
-        return res.status(401).json({error:"invaild username or password"})
-}
-const token=jwt.sign({vendorId:vendor._id},secretkey,{expiresIn:'1h'})
-    res.status(200).json({success:"Login successful",token});
-    console.log(email,"this is token",token);
-}catch(error){
-    console.log(error);
-    res.status(500).json({error:"internal server error"});
-}
-}
+    const token = jwt.sign({ vendorId: vendor._id }, secretKey, { expiresIn: "1h" });
 
-const getAllVendors=async(req,res)=>{
-    try{
-        const vendors=await Vendor.find().populate('firm');
-        res.json({vendors});
-    }catch(error){
+    const firmId = vendor.firm && vendor.firm.length > 0
+      ? vendor.firm[0]._id
+      : null;
+
+    res.status(200).json({
+      success: "Login successful",
+      token,
+      firmId,
+      vendor: {
+        _id: vendor._id,
+        email: vendor.email,
+        firm: vendor.firm,
+      }
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getAllVendors = async(req, res) => {
+    try {
+        const vendors = await Vendor.find().populate('firm');
+        res.json({ vendors })
+    } catch (error) {
         console.log(error);
-        res.status(500).json({error:'internal server error'});
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
-const getVendorById=async(req,res)=>{
-    
 
-    try{
-        const vendorId=req.params.hema;
-        const vendor=await Vendor.findById(vendorId);
-        if(!vendor){
-            return res.status(404).json({error:'vendor not foound'})
+const getVendorById = async(req, res) => {
+    const vendorId = req.params.apple;
+
+    try {
+        const vendor = await Vendor.findById(vendorId).populate('firm');
+        if (!vendor) {
+            return res.status(404).json({ error: "Vendor not found" })
         }
-        res.status(200).json({vendor})
-    }catch(error){
-         console.log(error);
-        res.status(500).json({error:'internal server error'});
+        const vendorFirmId = vendor.firm[0]._id;
+        res.status(200).json({ vendorId, vendorFirmId, vendor })
+        console.log(vendorFirmId);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
-module.exports={vendorRegister,vendorLogin,getAllVendors,getVendorById};
+
+module.exports = { vendorRegister, vendorLogin, getAllVendors, getVendorById }
