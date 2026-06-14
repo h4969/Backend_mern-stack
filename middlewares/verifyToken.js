@@ -6,6 +6,7 @@ const dotEnv = require('dotenv');
 dotEnv.config();
 
 const verifyToken = async (req, res, next) => {
+  console.log("JWT_SECRET:", process.env.JWT_SECRET); // ← add this line
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
