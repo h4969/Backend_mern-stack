@@ -5,8 +5,6 @@ const dotEnv = require('dotenv');
 
 dotEnv.config();
 
-const secretKey = process.env.JWT_SECRET;
-
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -15,7 +13,7 @@ const verifyToken = async (req, res, next) => {
   }
 
   const token = req.headers.authorization?.split(" ")[1];
-
+  const secretKey = process.env.JWT_SECRET;
   try {
     const decoded = jwt.verify(token, secretKey);
     const vendor = await Vendor.findById(decoded.vendorId);
