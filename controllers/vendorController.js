@@ -5,9 +5,8 @@ const dotEnv = require('dotenv');
 
 dotEnv.config();
 
-const secretKey = process.env.JWT_SECRET
 
-
+const secretKey = process.env.JWT_SECRET || "fallback_secret_key"; 
 
 const vendorRegister = async(req, res) => {
     
