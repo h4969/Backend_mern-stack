@@ -1,5 +1,6 @@
 const express = require("express");
 const dotEnv = require('dotenv');
+dotEnv.config();
 const mongoose = require('mongoose');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bodyParser = require('body-parser');
@@ -10,7 +11,6 @@ const path = require('path')
 
 const app = express()
 
-dotEnv.config();
 const PORT = process.env.PORT || 4000;
 
 
